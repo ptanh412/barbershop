@@ -4,9 +4,10 @@
   "description": "server",
   "main": "index.ts",
   "scripts": {
-    "build": "npx tsc",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
+    "start": "node --max-old-space-size=2048 dist/index.js",
+    "dev": "nodemon --max-old-space-size=2048 -x ts-node src/index.ts",
+    "build": "tsc",
+    "render-build": "npm install && npm run build"
   },
   "author": "",
   "license": "ISC",

@@ -1,5 +1,4 @@
 import express, {
-  ErrorRequestHandler,
   Express,
   Request,
   Response,
@@ -11,25 +10,42 @@ import { errorHandler } from "./middleware/errorHandler";
 import { routes } from "./routes";
 import { db } from "./services/database/connect";
 
+// Load environment variables first
 dotenv.config();
-db._connect();
+
+// Increase Node.js memory limit
+// Add this line to fix memory issues
+const maxMemory = process.env.NODE_OPTIONS || "--max-old-space-size=2048";
+process.env.NODE_OPTIONS = maxMemory;
+
+// Initialize Express app
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
-app.use(bodyParser.json());
+// Connect to database
+db._connect();
+
+// Set up middleware
+app.use(bodyParser.json({ limit: '10mb' })); // Increase JSON payload limit
 app.use(cors({
-  origin: ["http://dev.barbershop.com"],
+  origin: process.env.NODE_ENV === 'production' 
+    ? ["https://barbershop.com", "https://www.barbershop.com"] 
+    : ["http://dev.barbershop.com", "http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
+
+// Routes
 app.use(routes);
 app.use(errorHandler);
 
+// Health check endpoint
 app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
+  res.send("Express + TypeScript Server running");
 });
 
+// Start server
 app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://dev.barbershop.com`);
+  console.log(`⚡️[server]: Server is running on port ${port}`);
 });
