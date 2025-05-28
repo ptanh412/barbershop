@@ -29,7 +29,7 @@ db._connect();
 app.use(bodyParser.json({ limit: '10mb' })); // Increase JSON payload limit
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ["https://barbershop.com", "https://www.barbershop.com", "https://report-68b6a.web.app"] // <-- THÊM DOMAIN NÀY VÀO ĐÂY
+    ? ["https://report-68b6a.web.app/"] // <-- THÊM DOMAIN NÀY VÀO ĐÂY
     : "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
