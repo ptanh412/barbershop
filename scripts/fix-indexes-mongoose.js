@@ -1,12 +1,17 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-async function fixIndexes() {
-  try {
+async function fixIndexes() {  try {
     // Connect to MongoDB using the existing connection string
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/barbershop';
+    // The error shows "test.customers", so we need to connect to the test database
+    const mongoUri = process.env.MONGO_URL || 'mongodb://localhost:27017/test';
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB via Mongoose');
+    console.log('Database name:', mongoose.connection.db.databaseName);
+    
+    // Also check if there are any collections
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log('Available collections:', collections.map(c => c.name));
     
     const db = mongoose.connection.db;
     

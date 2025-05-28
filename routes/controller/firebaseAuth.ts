@@ -31,16 +31,13 @@ export class FirebaseAuthController {
             if (userType === "BARBER"){
                 user = await Barber.findOne({
                     firebaseUid: uid
-                });
-
-                if (!user) {
+                });                if (!user) {
                     const newUser = new Barber({
                         id: uuidv4(), // Generate a unique ID for the user
                         firebaseUid: uid,
                         email: email,
                         username: name,
                         password: Math.random().toString(36).slice(-8),
-                        phoneNumber: "",
                         role: "BARBER"
                     });
 
