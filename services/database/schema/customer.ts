@@ -5,7 +5,12 @@ const customerSchema = new Schema({
   id: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  phoneNumber: { type: String, unique: undefined, sparse: true },
+  phoneNumber: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: undefined // Thay vì "", dùng undefined
+  }, 
   password: { type: String, required: true },
   googleId: { type: String, unique: true, sparse: true },
   firebaseUid: { type: String, unique: true, sparse: true },
