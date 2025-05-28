@@ -200,8 +200,7 @@ export class BarberController {
       console.error("Error getting service templates:", error);
       next(error);
     }
-  };
-  static getShopAppointments = async (req: Request, res: Response, next: NextFunction) => {
+  };  static getShopAppointments = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authenticatedUser = (req as any).user as unknown as IBarber;
 
@@ -209,7 +208,7 @@ export class BarberController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUser.id });
+      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -227,9 +226,7 @@ export class BarberController {
         const searchDate = new Date(date as string);
         if (!isNaN(searchDate.getTime())) {
           const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
-          const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
-
-          filter.apointmentDataObj = {
+          const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));          filter.appointmentDate = {
             $gte: startOfDay,
             $lte: endOfDay,
           }
@@ -249,13 +246,11 @@ export class BarberController {
   };
   static getDailyAppointments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUser = (req as any).user as unknown as IBarber;
-
-      if (!authenticatedUser) {
+      const authenticatedUser = (req as any).user as unknown as IBarber;      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUser.id });
+      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -311,37 +306,31 @@ export class BarberController {
       }
 
       const { id } = req.params;
-      const { status } = req.body;
-
-      if (!status || !Object.values(AppointmentStatus).includes(status)) {
+      const { status } = req.body;      if (!status || !Object.values(AppointmentStatus).includes(status)) {
         return res.status(400).json({
           message: "Invalid status",
           validStatuses: Object.values(AppointmentStatus),
         });
       }
 
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUsser.id });
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
       }
 
-      const appointments = await appointment.findById(id);
-
-      if (!appointments) {
+      const appointments = await appointment.findById(id);      if (!appointments) {
         return res.status(404).json({ message: "Appointment not found" });
       }
 
-      if (appointments.shopId.toString() !== authenticatedUsser.id) {
+      if (appointments.shopId.toString() !== barberShop._id.toString()) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
       appointments.status = status;
       appointments.updatedAt = new Date();
-      await appointments.save();
-
-      res.status(200).json({
+      await appointments.save();      res.status(200).json({
         message: "Appointment status updated successfully",
-        appointment,
+        appointments,
       });
     } catch (error) {
       next(error);
@@ -353,9 +342,7 @@ export class BarberController {
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      }      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUsser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -380,9 +367,7 @@ export class BarberController {
 
       if (!services || !Array.isArray(services)) {
         return res.status(400).json({ message: "Services must be an array" });
-      }
-
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      }      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUsser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -416,11 +401,9 @@ export class BarberController {
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });
-      }
+      }      const { serviceId } = req.body;
 
-      const { serviceId } = req.body;
-
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUsser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
