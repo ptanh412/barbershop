@@ -80,7 +80,7 @@ export class FirebaseAuthController {
                         // Generate a random password or set a default value if required
                         password: Math.random().toString(36).slice(-8),
                         // Set other required fields with default values
-                        phoneNumber: "",
+                        // phoneNumber: "",
                         role: "CUSTOMER"
                     });
     
