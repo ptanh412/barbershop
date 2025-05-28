@@ -59,19 +59,24 @@ export class TimeSlotController {
                 });
             }
 
-            // Check if shop has operating hours
-            if (!barberShop.open_time || !barberShop.close_time) {
-                return res.status(400).json({
-                    message: "Shop operating hours not set"
-                });
+            // Check if shop has operating hours, use defaults if not set
+            let openTime = barberShop.open_time;
+            let closeTime = barberShop.close_time;
+            
+            if (!openTime || !closeTime) {
+                console.log(`Shop ${shopId} doesn't have operating hours set, using defaults`);
+                openTime = "09:00";  // Default 9:00 AM
+                closeTime = "18:00"; // Default 6:00 PM
             }
+
+            console.log(`Shop ${shopId} operating hours: ${openTime} - ${closeTime}`);
 
             const duration = parseInt(serviceDuration as string);
             const timeSlots = await TimeSlotController.generateTimeSlots(
                 shopId,
                 selectedDate,
-                barberShop.open_time,
-                barberShop.close_time,
+                openTime,
+                closeTime,
                 duration
             );
 
@@ -80,8 +85,8 @@ export class TimeSlotController {
             const response: AvailableTimeSlotsResponse = {
                 shopId,
                 date: selectedDate.toISOString().split('T')[0],
-                openTime: barberShop.open_time,
-                closeTime: barberShop.close_time,
+                openTime: openTime,
+                closeTime: closeTime,
                 timeSlots,
                 totalAvailable: availableCount
             };
