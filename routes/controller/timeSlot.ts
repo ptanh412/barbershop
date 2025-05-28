@@ -161,11 +161,11 @@ export class TimeSlotController {
                     slotDateTime,
                     serviceDuration,
                     existingAppointments
-                );
-
-                // Check if the time slot is in the past (for today's bookings)
+                );                // Check if the time slot is in the past (for today's bookings)
+                // Allow booking at least 1 hour in advance
                 const now = new Date();
-                const isPastTime = date.toDateString() === now.toDateString() && slotDateTime <= now;
+                const minimumAdvanceTime = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hour from now
+                const isPastTime = date.toDateString() === now.toDateString() && slotDateTime <= minimumAdvanceTime;
 
                 timeSlots.push({
                     time: timeString,
@@ -343,11 +343,11 @@ export class TimeSlotController {
                 slotDateTime,
                 duration,
                 existingAppointments
-            );
-
-            // Check if it's in the past
+            );            // Check if it's in the past
+            // Allow booking at least 1 hour in advance
             const now = new Date();
-            const isPastTime = selectedDate.toDateString() === now.toDateString() && slotDateTime <= now;
+            const minimumAdvanceTime = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hour from now
+            const isPastTime = selectedDate.toDateString() === now.toDateString() && slotDateTime <= minimumAdvanceTime;
 
             const available = !hasConflict && !isPastTime;
 
