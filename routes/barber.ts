@@ -8,10 +8,12 @@ import { jwtAuth } from "../middleware/jwtAuth";
 const router = Router();
 
 router.post("/signup", [], asyncHandler(BarberController.newBarber));
+router.post("/login", [], asyncHandler(BarberController.login));
 router.get("/", [], asyncHandler(BarberController.test));
 // Routes mới cho Firebase Auth
 router.post("/firebase/verify-token", [], asyncHandler(FirebaseAuthController.verifyFirebaseToken));
 router.post('/shop', jwtAuth, asyncHandler(BarberController.createShopForBarber));
+router.get('/service-templates', asyncHandler(BarberController.getServiceTemplates));
 
 // Routes với middleware bảo vệ
 router.get("/me", firebaseAuthMiddleware, asyncHandler(BarberController.getAuthenticatedUser));

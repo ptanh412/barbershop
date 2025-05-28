@@ -1,9 +1,9 @@
 import { Request, NextFunction, Response } from "express";
-import { firebaseAuth } from "../services/firebase/firebase-admin";
 import { Customer } from "../services/database/schema/customer"; // Assuming you have ICustomer
 import { v4 as uuidv4 } from 'uuid';
 import { ClientError } from "./exception/clientError";
 import { IUser } from "../types/user";
+import { firebaseAuth } from "../services/firebase/firebase-admin";
 
 export const firebaseAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {

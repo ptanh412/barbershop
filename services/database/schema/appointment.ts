@@ -1,48 +1,54 @@
 import mongoose, {Schema} from "mongoose";
 import { AppointmentStatus, IAppointment } from "../../../types/appointment";
 
-const appointmentSchema = new Schema({
-    customerId: {
-        type: mongoose.Types.ObjectId,
-        required: true,
-        ref: "Customer",
-    },
-    shopId:{
-        type: mongoose.Types.ObjectId,
-        required: true,
-        ref: "Shop",
-    },
-    services: [{
-        type: String,
-        required: true,
-    }],
-    appointmentDate: {
-        type: Date,
-        required: true,
-    },
-    status:{
-        type: String,
-        enum: Object.values(AppointmentStatus),
-        default: AppointmentStatus.PENDING,
-    },
-    notes:{type: String},
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
-    reminderSent: {
-        type: Boolean,
-        default: false,
-    },
-    reminderTime: {
-        type: Date,
-    },
-},{
-    timestamps: true,
-})
+const appointmentServiceSchema = new Schema({
+    serviceId: { type: Schema.Types.ObjectId, required: true },
+    serviceName: { type: String, required: true },
+    servicePrice: { type: Number, required: true },
+    serviceDuration: { type: Number, required: true }
+});
 
-export const Appointment = mongoose.model<IAppointment>("Appointment", appointmentSchema);
+const appointmentSchema = new Schema({
+    customerId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Customer', 
+        required: true 
+    },
+    shopId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'BarberShop', 
+        required: true 
+    },
+    services: [appointmentServiceSchema], // Lưu chi tiết service
+    appointmentDate: { 
+        type: Date, 
+        required: true 
+    },
+    status: { 
+        type: String, 
+        enum: Object.values(AppointmentStatus), 
+        default: AppointmentStatus.PENDING 
+    },
+    note: { 
+        type: String 
+    },
+    reminderSent: { 
+        type: Boolean, 
+        default: false 
+    },
+    reminderTime: { 
+        type: Date 
+    },
+    totalPrice: { 
+        type: Number, 
+        required: true 
+    },
+    totalDuration: { 
+        type: Number, 
+        required: true 
+    }
+}, {
+    timestamps: true
+});
+
+export default mongoose.model<IAppointment>("Appointment", appointmentSchema);

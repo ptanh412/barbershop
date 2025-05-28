@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { createUser } from "../../lib/createUser";
 import { IUser } from "../../types/user";
 import shop from "../../services/database/schema/shop";
+import { Customer } from "../../services/database/schema/customer";
+import { comparePassword, generateJwtToken } from "../../helpers/jwt";
 
 export class CustomerController {
   static newCust = async (req: Request, res: Response, next: NextFunction) => {
@@ -13,21 +15,190 @@ export class CustomerController {
   static test = async (req: Request, res: Response, next: NextFunction) => {
     res.status(200).type("json").send({ message: "test" });
   };
+  // Thêm method đăng nhập
+  static login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body;
+
+      // Kiểm tra nếu thiếu thông tin đăng nhập
+      if (!email || !password) {
+        return res.status(400).json({
+          error: "Email và mật khẩu là bắt buộc"
+        });
+      }
+
+      // Tìm người dùng theo email
+      const customer = await Customer.findOne({ email });
+
+      if (!customer) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+
+      // Kiểm tra mật khẩu
+      // Giả sử đã có function comparePassword để so sánh mật khẩu đã mã hóa
+      if (!customer.password) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+      const isPasswordValid = await comparePassword(password, customer.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+
+      // Tạo JWT token
+      const token = generateJwtToken(customer);
+
+      // Trả về thông tin người dùng và token
+      return res.status(200).json({
+        token,
+        user: {
+          id: customer.id,
+          username: customer.username,
+          email: customer.email,
+          phoneNumber: customer.phoneNumber
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({
+        error: "Lỗi server khi đăng nhập"
+      });
+    }
+  };
+  static updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authenticatedUser = req.user as IUser;
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { username, email, phoneNumber } = req.body;
+
+      // Validation
+      if (!username || !email) {
+        return res.status(400).json({
+          error: "Tên và email là bắt buộc"
+        });
+      }
+
+      // Kiểm tra email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          error: "Email không hợp lệ"
+        });
+      }
+
+      // Kiểm tra phone number format nếu có
+      if (phoneNumber && phoneNumber.trim() !== '') {
+        const phoneRegex = /^[\d\-\s\+\(\)]+$/;
+        if (!phoneRegex.test(phoneNumber)) {
+          return res.status(400).json({
+            error: "Số điện thoại không hợp lệ"
+          });
+        }
+      }
+
+      // Kiểm tra xem email đã tồn tại cho user khác chưa
+      const existingCustomer = await Customer.findOne({
+        email,
+        _id: { $ne: authenticatedUser._id }
+      });
+
+      if (existingCustomer) {
+        return res.status(400).json({
+          error: "Email đã được sử dụng bởi tài khoản khác"
+        });
+      }
+
+      // Kiểm tra xem username đã tồn tại cho user khác chưa
+      const existingUsername = await Customer.findOne({
+        username,
+        _id: { $ne: authenticatedUser._id }
+      });
+
+      if (existingUsername) {
+        return res.status(400).json({
+          error: "Tên người dùng đã được sử dụng"
+        });
+      }
+
+      // Cập nhật thông tin
+      const updatedCustomer = await Customer.findByIdAndUpdate(
+        authenticatedUser._id,
+        {
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
+          phoneNumber: phoneNumber ? phoneNumber.trim() : ''
+        },
+        {
+          new: true, // Trả về document sau khi update
+          runValidators: true // Chạy validation
+        }
+      ).select('-password');
+
+      if (!updatedCustomer) {
+        return res.status(404).json({
+          error: "Không tìm thấy người dùng"
+        });
+      }
+
+      return res.status(200).json({
+        message: "Cập nhật thông tin thành công",
+        user: {
+          id: updatedCustomer.id,
+          username: updatedCustomer.username,
+          email: updatedCustomer.email,
+          phoneNumber: updatedCustomer.phoneNumber || ''
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    };
+  }
 
   static getAuthenticatedUser = async (req: Request, res: Response, next: NextFunction) => {
-    const authenticatedUsser = req.user as IUser;
-    if (!authenticatedUsser) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    try {
+      const authenticatedUser = req.user as IUser;
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
-    const { id, username, email, phoneNumber } = authenticatedUsser;
-    res.status(200).json({
-      id,
-      username,
-      email,
-      phoneNumber,
-    });
-  }
+      console.log('Getting user info for:', authenticatedUser.id, authenticatedUser.firebaseUid);
+
+      // Tìm user (đã được verify trong middleware)
+      const customer = authenticatedUser;
+
+      if (!customer) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Trả về thông tin user
+      const responseData = {
+        id: customer.id || customer._id?.toString(),
+        username: customer.username || '',
+        email: customer.email || '',
+        phoneNumber: customer.phoneNumber || '',
+        firebaseUid: customer.firebaseUid || null,
+        role: customer.role
+      };
+
+      console.log('Returning user data:', responseData);
+      res.status(200).json(responseData);
+    } catch (error) {
+      console.error("Get authenticated user error:", error);
+      return res.status(500).json({
+        error: "Lỗi server khi lấy thông tin người dùng"
+      });
+    }
+  };
 
   static getAllBarberShops = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -105,7 +276,7 @@ export class CustomerController {
   }
 
   static getBarberShopServices = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
       const authenticatedUser = req.user as IUser;
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -114,8 +285,8 @@ export class CustomerController {
       const { id } = req.params;
 
       const barberShop = await shop.findById(id)
-      .select('shop_name services')
-      .exec();
+        .select('shop_name services')
+        .exec();
 
       if (!barberShop) {
         return res.status(404).json({ message: "Shop not found" });
@@ -125,8 +296,8 @@ export class CustomerController {
         shop_name: barberShop.shop_name,
         services: barberShop.services,
       })
-    }catch (error) {
-        next(error);
+    } catch (error) {
+      next(error);
     }
   }
 }

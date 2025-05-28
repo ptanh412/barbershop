@@ -19,4 +19,13 @@ router.get("/reminders/pending", jwtAuth, asyncHandler(AppointmentController.get
 
 router.patch("/reminders/:id/mark-sent", jwtAuth, asyncHandler(AppointmentController.markReminderSent));
 
+router.put('/:id/cancel', jwtAuth, asyncHandler(AppointmentController.cancelAppointment));
+router.get('/customer/stats', jwtAuth, asyncHandler(AppointmentController.getCustomerAppointmentStats));
+
+router.get('/customer/monthly/:year/:month', jwtAuth, asyncHandler(AppointmentController.getMonthlyBreakdown));
+
+// Get appointments trend for chart
+router.get('/customer/trend', jwtAuth, asyncHandler(AppointmentController.getAppointmentTrend));
+
+
 export { router as appointmentRouter };

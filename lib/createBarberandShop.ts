@@ -10,24 +10,16 @@ export const createBarberAndShop = async (
     email: string,
     password: string,
     phoneNumber: string,
-    shopName: string,
-    address: string,
-    latitude: number,
-    longitude: number,
 ): Promise<IBarberShop> => {
     username = username.trim();
     email = email.trim();
     password = password.trim();
     phoneNumber = phoneNumber.trim();
-    shopName = shopName.trim();
-    address = address.trim();
 
     if (username.length === 0) throw new Error("Username cannot be empty");
     if (email.length === 0) throw new Error("Email cannot be empty");
     if (password.length === 0) throw new Error("Password cannot be empty");
     if (phoneNumber.length === 0) throw new Error("Phone number cannot be empty");
-    if (shopName.length === 0) throw new Error("Shop name cannot be empty");
-    if (address.length === 0) throw new Error("Address cannot be empty");
 
     const existingBarber = await Barber.findOne({
         $or: [
@@ -58,11 +50,8 @@ export const createBarberAndShop = async (
 
     const newBarberShop = new BarberShop({
         barberInfo: newBarber._id,
-        shop_name: shopName,
         phone_number: phoneNumber,
-        address,
-        latitude,
-        longitude,
+
         services: [],
         review: [],
     });

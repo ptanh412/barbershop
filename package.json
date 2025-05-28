@@ -2,12 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "server",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "start": "node --max-old-space-size=2048 dist/index.js",
     "dev": "nodemon --max-old-space-size=2048 -x ts-node src/index.ts",
-    "build": "tsc",
-    "render-build": "npm install && npm run build"
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",

@@ -4,37 +4,93 @@ import { createBarberAndShop } from "../../lib/createBarberandShop";
 import { IBarber } from "../../types/barber";
 import shop from "../../services/database/schema/shop";
 import { AppointmentStatus } from "../../types/appointment";
-import { Appointment } from "../../services/database/schema/appointment";
+import appointment from "../../services/database/schema/appointment";
+import { Barber } from "../../services/database/schema/barber";
+import { comparePassword, generateJwtToken } from "../../helpers/jwt";
+import { ServiceTemplate } from "../../types/serviceTemplate";
+import { generateToken } from "../../services/auth/generateToken";
 
 export class BarberController {
   static newBarber = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      let {
-        username,
-        password,
-        email,
-        phone_number,
-        shop_name,
-        address,
-        latitude,
-        longitude,
-      } = req.body;
-      latitude = parseFloat(latitude);
-      longitude = parseFloat(longitude);
+  try {
+    let { username, password, email } = req.body;
 
-      const newShop = await createBarberAndShop(
-        username,
-        email,
-        password,
-        phone_number,
-        shop_name,
-        address,
-        latitude,
-        longitude
-      );
-      res.status(201).json(newShop);
+    // Tạo barber mới
+    const newBarber = await createBarber(username, email, password);
+    
+    // Tạo token cho barber vừa tạo
+    const token = generateToken(newBarber);
+    
+    // Trả về response bao gồm token và thông tin user
+    res.status(201).json({
+      message: "Barber created successfully",
+      token: token,
+      user: {
+        id: newBarber.id,
+        username: newBarber.username,
+        email: newBarber.email,
+        role: newBarber.role,
+        firebaseUid: newBarber.firebaseUid
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error creating barber:", error);
+    next(error);
+  }
+};
+  static login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body;
+
+      // Kiểm tra nếu thiếu thông tin đăng nhập
+      if (!email || !password) {
+        return res.status(400).json({
+          error: "Email và mật khẩu là bắt buộc"
+        });
+      }
+
+      // Tìm người dùng theo email
+      const barber = await Barber.findOne({ email });
+
+      if (!barber) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+
+      // Kiểm tra mật khẩu
+      // Giả sử đã có function comparePassword để so sánh mật khẩu đã mã hóa
+      if (!barber.password) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+      const isPasswordValid = await comparePassword(password, barber.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          error: "Email hoặc mật khẩu không chính xác"
+        });
+      }
+
+      // Tạo JWT token
+      const token = generateJwtToken(barber);
+
+      // Trả về thông tin người dùng và token
+      return res.status(200).json({
+        token,
+        user: {
+          id: barber.id,
+          username: barber.username,
+          email: barber.email,
+        }
+      });
     } catch (error) {
-      next(error);
+      console.error("Login error:", error);
+      return res.status(500).json({
+        error: "Lỗi server khi đăng nhập"
+      });
     }
   };
 
@@ -56,19 +112,20 @@ export class BarberController {
   }
   static createShopForBarber = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
-      console.log("Authenticated user:", authenticatedUsser);
-      if (!authenticatedUsser) {
+      const authenticatedUser = req.user as IBarber;
+      console.log("Authenticated user:", authenticatedUser);
+      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const existingShop = await shop.findOne({
-        barberInfo: authenticatedUsser.id,
+        "barberInfo.id": authenticatedUser.id,
       });
 
       if (existingShop) {
         return res.status(400).json({ message: "Shop already exists" });
       }
+
       const {
         shop_name,
         phone_number,
@@ -84,14 +141,31 @@ export class BarberController {
       console.log("Request body:", req.body);
 
       if (!shop_name || !address || !latitude || !longitude) {
-        return res.status(400).json({ message: "Shop name, phone number, and address are required" });
+        return res.status(400).json({ message: "Shop name, address, and location are required" });
+      }
+
+      // Validate services format
+      if (services && Array.isArray(services)) {
+        for (const service of services) {
+          if (!service.name || typeof service.price !== 'number') {
+            return res.status(400).json({
+              message: "Each service must include a name and price"
+            });
+          }
+        }
       }
 
       const parsedLatitude = latitude ? parseFloat(latitude) : null;
       const parsedLongitude = longitude ? parseFloat(longitude) : null;
 
       const newBarberShop = new shop({
-        barberInfo: authenticatedUsser.id,
+        barberInfo: {
+          id: authenticatedUser.id,
+          username: authenticatedUser.username,
+          email: authenticatedUser.email,
+          password: authenticatedUser.password,
+          role: authenticatedUser.role
+        },
         shop_name,
         phone_number,
         address,
@@ -101,14 +175,31 @@ export class BarberController {
         close_time,
         account_number,
         services: services || [],
-        reviews: [],
-      })
+        review: [],
+      });
+
       await newBarberShop.save();
+
       res.status(201).json({
         message: "Shop created successfully",
         shop: newBarberShop,
       });
     } catch (error) {
+      console.error("Error creating shop:", error);
+      next(error);
+    }
+  }
+  // Controller method to get default service templates
+  static getServiceTemplates = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const serviceTemplates = await ServiceTemplate.find({});
+      res.status(200).json({
+        success: true,
+        count: serviceTemplates.length,
+        serviceTemplates
+      });
+    } catch (error) {
+      console.error("Error getting service templates:", error);
       next(error);
     }
   }
@@ -148,7 +239,7 @@ export class BarberController {
         }
       }
 
-      const appointments = await Appointment.find(filter)
+      const appointments = await appointment.find(filter)
         .populate('customerId', 'username email phoneNumber')
         .sort({
           appointmentDate: -1
@@ -162,7 +253,7 @@ export class BarberController {
   }
 
   static getDailyAppointments = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
       const authenticatedUsser = req.user as IBarber;
 
       if (!authenticatedUsser) {
@@ -176,11 +267,11 @@ export class BarberController {
       }
 
       const dateParam = req.params.date as string;
-      const date = dateParam ?  new Date(dateParam) : new Date();
+      const date = dateParam ? new Date(dateParam) : new Date();
       if (!date) {
         return res.status(400).json({ message: "Date is required" });
       }
-      
+
       if (isNaN(date.getTime())) {
         return res.status(400).json({ message: "Invalid date" });
       }
@@ -188,7 +279,7 @@ export class BarberController {
       const startOfDay = new Date(date).setHours(0, 0, 0, 0);
       const endOfDay = new Date(date).setHours(23, 59, 59, 999);
 
-      const appointments = await Appointment.find({
+      const appointments = await appointment.find({
         shopId: barberShop._id,
         appointmentDate: {
           $gte: startOfDay,
@@ -211,8 +302,8 @@ export class BarberController {
       res.status(200).json({
         date: date.toISOString().split('T')[0],
         appointments
-      }); 
-    }catch (error) {
+      });
+    } catch (error) {
       next(error);
     }
   }
@@ -232,27 +323,27 @@ export class BarberController {
         return res.status(400).json({
           message: "Invalid status",
           validStatuses: Object.values(AppointmentStatus),
-         });
+        });
       }
 
-      const barberShop = await shop.findOne({barberInfo: authenticatedUsser.id });
+      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
       }
 
-      const appointment = await Appointment.findById(id);
+      const appointments = await appointment.findById(id);
 
-      if (!appointment) {
+      if (!appointments) {
         return res.status(404).json({ message: "Appointment not found" });
       }
 
-      if (appointment.shopId.toString() !== authenticatedUsser.id) {
+      if (appointments.shopId.toString() !== authenticatedUsser.id) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      appointment.status = status;
-      appointment.updatedAt = new Date();
-      await appointment.save();
+      appointments.status = status;
+      appointments.updatedAt = new Date();
+      await appointments.save();
 
       res.status(200).json({
         message: "Appointment status updated successfully",
@@ -264,7 +355,7 @@ export class BarberController {
   }
 
   static getShopServices = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
       const authenticatedUsser = req.user as IBarber;
 
       if (!authenticatedUsser) {
@@ -280,13 +371,13 @@ export class BarberController {
         shop_name: barberShop.shop_name,
         services: barberShop.services,
       });
-    }catch (error) {
+    } catch (error) {
       next(error);
     }
   }
-  
+
   static addShopServices = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
       const authenticatedUsser = req.user as IBarber;
 
       if (!authenticatedUsser) {
@@ -323,13 +414,13 @@ export class BarberController {
         message: "Services added successfully",
         services: barberShop.services,
       });
-    }catch (error) {
+    } catch (error) {
       next(error);
     }
   }
 
   static removeShopServices = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
       const authenticatedUsser = req.user as IBarber;
 
       if (!authenticatedUsser) {
@@ -355,7 +446,7 @@ export class BarberController {
         message: "Services removed successfully",
         services: barberShop.services,
       });
-    }catch (error) {
+    } catch (error) {
       next(error);
     }
   }

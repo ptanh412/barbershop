@@ -28,9 +28,9 @@ db._connect();
 // Set up middleware
 app.use(bodyParser.json({ limit: '10mb' })); // Increase JSON payload limit
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ["https://barbershop.com", "https://www.barbershop.com"] 
-    : ["http://dev.barbershop.com", "http://localhost:3000"],
+  origin: process.env.NODE_ENV === 'production'
+    ? ["https://barbershop.com", "https://www.barbershop.com"]
+    : "*", // Cho phép tất cả các origin trong dev
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

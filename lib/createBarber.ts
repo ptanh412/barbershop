@@ -7,7 +7,7 @@ import { Barber } from "../services/database/schema/barber";
 export const createBarber = async (
   username: string,
   email: string,
-  password: string
+  password: string,
 ): Promise<IBarber> => {
   username = username.trim();
   password = password.trim();
@@ -28,6 +28,7 @@ export const createBarber = async (
     id: uuidv4(),
     username,
     email,
+    role: "BARBER",
     password: hashPassword,
   });
 

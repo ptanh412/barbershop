@@ -5,9 +5,11 @@ import { IBarber } from "../../types/barber";
 
 export const generateToken = (user: IUser | IBarber): string => {
     const payload = {
-        sub: user.id,
+        id: user.id,           // Thêm id vào payload
+        sub: user.id,          // Giữ sub như cũ
         email: user.email,
         role: user.role,
+        firebaseUid: user.firebaseUid || null  // Thêm firebaseUid
     };
 
     if (!config.jwt.secret) {
