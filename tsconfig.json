@@ -1,5 +1,4 @@
-{
-  "compilerOptions": {
+{  "compilerOptions": {
     "target": "es2020",
     "lib": ["es2020"],
     "module": "commonjs",
@@ -12,8 +11,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node"]
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
     "**/*.ts",
