@@ -226,7 +226,8 @@ export class BarberController {
         const searchDate = new Date(date as string);
         if (!isNaN(searchDate.getTime())) {
           const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
-          const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));          filter.appointmentDate = {
+          const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));          
+          filter.appointmentDate = {
             $gte: startOfDay,
             $lte: endOfDay,
           }

@@ -9,11 +9,11 @@
     "start": "node --max-old-space-size=2048 dist/index.js",
     "dev": "nodemon --max-old-space-size=2048 -x ts-node src/index.ts",
     "build": "tsc",
-    "render-build": "npm install --include=dev && tsc"
+    "render-build": "npm install --include=dev && tsc",
+    "fix-indexes": "node scripts/fix-indexes-mongoose.js"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
+  "license": "ISC",  "dependencies": {
     "@types/node": "^20.17.51",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
@@ -23,6 +23,7 @@
     "firebase": "^11.7.1",
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.3.0",
     "mongoose": "^7.2.0",
     "nodemailer": "^7.0.3",
     "passport": "^0.7.0",

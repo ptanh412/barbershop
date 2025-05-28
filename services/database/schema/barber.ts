@@ -6,8 +6,8 @@ const barberSchema = new Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  googleId: { type: String },
-  firebaseUid: { type: String },
+  googleId: { type: String, unique: true, sparse: true },
+  firebaseUid: { type: String, unique: true, sparse: true },
   role: {
     type: String,
     enum: ["BARBER"],
