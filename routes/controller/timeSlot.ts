@@ -21,11 +21,10 @@ export interface AvailableTimeSlotsResponse {
 export class TimeSlotController {
     /**
      * Get available time slots for a specific shop on a given date
-     */
-    static getAvailableTimeSlots = async (req: Request, res: Response, next: NextFunction) => {
+     */    static getAvailableTimeSlots = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { shopId } = req.params;
-            const { date, serviceDuration = 30 } = req.query;
+            const { shopId, date } = req.params;
+            const { serviceDuration = 30 } = req.query;
 
             if (!shopId || !date) {
                 return res.status(400).json({
