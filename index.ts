@@ -20,7 +20,7 @@ process.env.NODE_OPTIONS = maxMemory;
 
 // Initialize Express app
 const app: Express = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 10000;
 
 // Connect to database
 db._connect();
