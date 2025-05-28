@@ -60,10 +60,8 @@ export const jwtAuth = async (req: Request, res: Response, next: NextFunction): 
             console.log('User not found with id or firebaseUid');
             res.status(401).json({ message: 'Invalid token: User not found' });
             return;
-        }
-
-        console.log('User found:', user.id, user.email, user.role);
-        req.user = user;
+        }        console.log('User found:', user.id, user.email, user.role);
+        (req as any).user = user;
         next();
 
     } catch (error: any) {

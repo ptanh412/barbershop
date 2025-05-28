@@ -93,26 +93,25 @@ export class BarberController {
       });
     }
   };
-
   static test = async (req: Request, res: Response, next: NextFunction) => {
     res.status(200).type("json").send({ message: "test" });
   };
-  static getAuthenticatedUser = async (req: Request, res: Response, next: NextFunction) => {
-    const authenticatedUsser = req.user as IBarber;
-    if (!authenticatedUsser) {
+    static getAuthenticatedUser = async (req: Request, res: Response, next: NextFunction) => {
+    const authenticatedUser = (req as any).user as unknown as IBarber;
+    if (!authenticatedUser) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { id, username, email } = authenticatedUsser;
+    const { id, username, email } = authenticatedUser;
     res.status(200).json({
       id,
       username,
       email,
     });
-  }
-  static createShopForBarber = async (req: Request, res: Response, next: NextFunction) => {
+  };
+    static createShopForBarber = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUser = req.user as IBarber;
+      const authenticatedUser = (req as any).user as unknown as IBarber;
       console.log("Authenticated user:", authenticatedUser);
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -197,22 +196,20 @@ export class BarberController {
         success: true,
         count: serviceTemplates.length,
         serviceTemplates
-      });
-    } catch (error) {
+      });    } catch (error) {
       console.error("Error getting service templates:", error);
       next(error);
     }
-  }
-
+  };
   static getShopAppointments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUser = (req as any).user as unknown as IBarber;
 
-      if (!authenticatedUsser) {
+      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      const barberShop = await shop.findOne({ barberInfo: authenticatedUser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -245,22 +242,20 @@ export class BarberController {
           appointmentDate: -1
         })
         .exec();
-
-      res.status(200).json(appointments);
+    res.status(200).json(appointments);
     } catch (error) {
       next(error);
     }
-  }
-
+  };
   static getDailyAppointments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUser = (req as any).user as unknown as IBarber;
 
-      if (!authenticatedUsser) {
+      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const barberShop = await shop.findOne({ barberInfo: authenticatedUsser.id });
+      const barberShop = await shop.findOne({ barberInfo: authenticatedUser.id });
 
       if (!barberShop) {
         return res.status(404).json({ message: "Barber shop not found" });
@@ -307,10 +302,9 @@ export class BarberController {
       next(error);
     }
   }
-
   static updateAppointmentStatusByBarber = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUsser = (req as any).user as unknown as IBarber;
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -353,10 +347,9 @@ export class BarberController {
       next(error);
     }
   }
-
   static getShopServices = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUsser = (req as any).user as unknown as IBarber;
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -375,10 +368,9 @@ export class BarberController {
       next(error);
     }
   }
-
   static addShopServices = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUsser = (req as any).user as unknown as IBarber;
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -418,10 +410,9 @@ export class BarberController {
       next(error);
     }
   }
-
   static removeShopServices = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IBarber;
+      const authenticatedUsser = (req as any).user as unknown as IBarber;
 
       if (!authenticatedUsser) {
         return res.status(401).json({ message: "Unauthorized" });

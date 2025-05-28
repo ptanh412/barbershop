@@ -7,9 +7,8 @@ import mongoose from "mongoose";
 
 
 export class AppointmentController {
-    static createAppointment = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const authenticatedUser = req.user as IUser;
+    static createAppointment = async (req: Request, res: Response, next: NextFunction) => {        try {
+            const authenticatedUser = (req as any).user as unknown as IUser;
             console.log('Authenticated User:', authenticatedUser);
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
@@ -108,12 +107,10 @@ export class AppointmentController {
         } catch (error) {
             next(error);
         }
-    }
-
-    // Get appointment by ID
+    }    // Get appointment by ID
     static getAppointmentById = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -168,15 +165,14 @@ export class AppointmentController {
             res.status(200).json({
                 message: "Appointment cancelled successfully",
                 appointment: appoint,
-            });
-        } catch (error) {
+            });        } catch (error) {
             next(error);
         }
-    }
+    };
 
     static getCustomerAppointments = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -230,11 +226,9 @@ export class AppointmentController {
         } catch (error) {
             next(error);
         }
-    };
-
-    static updateAppointmentStatus = async (req: Request, res: Response, next: NextFunction) => {
+    };    static updateAppointmentStatus = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUsser = req.user as IUser;
+            const authenticatedUsser = (req as any).user as unknown as IUser;
             if (!authenticatedUsser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -266,15 +260,14 @@ export class AppointmentController {
             res.status(200).json({
                 message: "Appointment status updated successfully",
                 appoint
-            });
-        } catch (error) {
+            });        } catch (error) {
             next(error);
         }
-    }
+    };
 
     static rescheduleAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -391,14 +384,13 @@ export class AppointmentController {
             }).populate('customerId', 'username email phoneNumber')
                 .populate('shopId', 'shop_name address phone_number').exec();
 
-            res.status(200).json(pendingReminders);
-        } catch (error) {
+            res.status(200).json(pendingReminders);        } catch (error) {
             next(error);
         }
-    }
+    };
     static cancelAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -446,11 +438,10 @@ export class AppointmentController {
         } catch (error) {
             next(error);
         }
-    }
-    // Controller method for getting customer appointment statistics
+    }    // Controller method for getting customer appointment statistics
     static getCustomerAppointmentStats = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -559,12 +550,10 @@ export class AppointmentController {
             console.error('Error getting customer appointment stats:', error);
             next(error);
         }
-    };
-
-    // Add route for detailed monthly breakdown
+    };    // Add route for detailed monthly breakdown
     static getMonthlyBreakdown = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
@@ -635,11 +624,10 @@ export class AppointmentController {
         } catch (error) {
             next(error);
         }
-    }
-    // Additional controller method for trend data
+    }    // Additional controller method for trend data
     static getAppointmentTrend = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authenticatedUser = req.user as IUser;
+            const authenticatedUser = (req as any).user as unknown as IUser;
             if (!authenticatedUser) {
                 return res.status(401).json({ message: "Unauthorized" });
             }

@@ -70,10 +70,9 @@ export class CustomerController {
         error: "Lỗi server khi đăng nhập"
       });
     }
-  };
-  static updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  };  static updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUser = req.user as IUser;
+      const authenticatedUser = (req as any).user as unknown as IUser;
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -163,10 +162,9 @@ export class CustomerController {
       next(error);
     };
   }
-
   static getAuthenticatedUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUser = req.user as IUser;
+      const authenticatedUser = (req as any).user as unknown as IUser;
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -198,12 +196,10 @@ export class CustomerController {
         error: "Lỗi server khi lấy thông tin người dùng"
       });
     }
-  };
-
-  static getAllBarberShops = async (req: Request, res: Response, next: NextFunction) => {
+  };  static getAllBarberShops = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IUser;
-      if (!authenticatedUsser) {
+      const authenticatedUser = (req as any).user as unknown as IUser;
+      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
@@ -245,16 +241,14 @@ export class CustomerController {
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum),
         data: shops,
-      })
-    } catch (error) {
+      })    } catch (error) {
       next(error);
     }
-  }
-
+  };
   static getBarberShopById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUsser = req.user as IUser;
-      if (!authenticatedUsser) {
+      const authenticatedUser = (req as any).user as unknown as IUser;
+      if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
@@ -274,10 +268,9 @@ export class CustomerController {
       next(error);
     }
   }
-
   static getBarberShopServices = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authenticatedUser = req.user as IUser;
+      const authenticatedUser = (req as any).user as unknown as IUser;
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }

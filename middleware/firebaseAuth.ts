@@ -83,11 +83,10 @@ export const firebaseAuthMiddleware = async (req: Request, res: Response, next: 
           }
         } else {
           return next(new ClientError('No email associated with this account'));
-        }
-      }
+        }      }
 
       // Gán user vào request để các route tiếp theo có thể sử dụng
-      req.user = user as IUser;
+      (req as any).user = user as IUser;
       next(); // Crucially, call next() here to proceed to the route handler
     } catch (error) {
       console.error('Firebase auth error:', error);
