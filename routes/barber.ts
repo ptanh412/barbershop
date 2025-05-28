@@ -18,9 +18,9 @@ router.get('/service-templates', asyncHandler(BarberController.getServiceTemplat
 // Routes với middleware bảo vệ
 router.get("/me", firebaseAuthMiddleware, asyncHandler(BarberController.getAuthenticatedUser));
 
-router.get("/appoinments", jwtAuth, asyncHandler(BarberController.getShopAppointments));
-router.get("/apointments/:id/status", jwtAuth, asyncHandler(BarberController.updateAppointmentStatusByBarber));
-router.get("apointments/daily", jwtAuth, asyncHandler(BarberController.getDailyAppointments));
+router.get("/appointments", jwtAuth, asyncHandler(BarberController.getShopAppointments));
+router.patch("/appointments/:id/status", jwtAuth, asyncHandler(BarberController.updateAppointmentStatusByBarber));
+router.get("/appointments/daily", jwtAuth, asyncHandler(BarberController.getDailyAppointments));
 router.get('/shop/services', jwtAuth, asyncHandler(BarberController.getShopServices));
 router.post('/shop/services', jwtAuth, asyncHandler(BarberController.addShopServices));
 router.delete('/shop/services/:serviceId', jwtAuth, asyncHandler(BarberController.removeShopServices));
