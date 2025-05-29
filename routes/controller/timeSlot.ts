@@ -167,7 +167,7 @@ export class TimeSlotController {
                 const isToday = date.toDateString() === now.toDateString();
                 const isPastTime = isToday && slotDateTime <= now;
                 
-                console.log(`Checking slot ${timeString}: now=${now.toLocaleTimeString()}, slot=${slotDateTime.toLocaleTimeString()}, isPast=${isPastTime}, isToday=${isToday}`);
+                console.log(`Checking slot ${timeString}: now=${now.toLocaleTimeString()}, slot=${slotDateTime.toLocaleTimeString()}, isPast=${isPastTime}, isToday=${isToday}, available=${!conflict && !isPastTime}`);
 
                 timeSlots.push({
                     time: timeString,
@@ -180,9 +180,12 @@ export class TimeSlotController {
             currentTime.minute += intervalMinutes;
             if (currentTime.minute >= 60) {
                 currentTime.hour += 1;
-                currentTime.minute = 0;
-            }
+                currentTime.minute = 0;            }
         }
+
+        const availableSlots = timeSlots.filter(slot => slot.available);
+        console.log(`Generated ${timeSlots.length} total slots, ${availableSlots.length} available slots`);
+        console.log('Available slots:', availableSlots.map(s => s.time).join(', '));
 
         return timeSlots;
     }
