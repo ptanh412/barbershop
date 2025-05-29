@@ -343,11 +343,11 @@ export class TimeSlotController {
                 slotDateTime,
                 duration,
                 existingAppointments
-            );            // Check if it's in the past
-            // Allow booking at least 1 hour in advance
+            );
+
+            // Check if it's in the past
             const now = new Date();
-            const minimumAdvanceTime = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hour from now
-            const isPastTime = selectedDate.toDateString() === now.toDateString() && slotDateTime <= minimumAdvanceTime;
+            const isPastTime = selectedDate.toDateString() === now.toDateString() && slotDateTime <= now;
 
             const available = !hasConflict && !isPastTime;
 
