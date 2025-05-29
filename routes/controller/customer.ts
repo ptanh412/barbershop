@@ -8,8 +8,26 @@ import { comparePassword, generateJwtToken } from "../../helpers/jwt";
 export class CustomerController {
   static newCust = async (req: Request, res: Response, next: NextFunction) => {
     let { username, password, email, phoneNumber } = req.body;
-    const user = await createUser(username, email, password, phoneNumber);
-    res.status(201).type("json").send(user);
+
+    // Tạo barber mới
+    const newCust = await createUser(username, email, password, phoneNumber);
+    
+    // Tạo token cho barber vừa tạo
+    const token = generateJwtToken(newCust);
+    
+    // Trả về response bao gồm token và thông tin user
+    res.status(201).json({
+      message: "Customer created successfully",
+      token: token,
+      user: {
+        id: newCust.id,
+        username: newCust.username,
+        email: newCust.email,
+        phoneNumber: newCust.phoneNumber,
+        role: newCust.role,
+        firebaseUid: newCust.firebaseUid
+      }
+    });
   };
 
   static test = async (req: Request, res: Response, next: NextFunction) => {
