@@ -164,10 +164,14 @@ export class TimeSlotController {
                 );                // Check if the time slot is in the past (for today's bookings)
                 // For today's date, only show future time slots that are after current time
                 const now = new Date();
-                const isToday = date.toDateString() === now.toDateString();
-                const isPastTime = isToday && slotDateTime <= now;
+                // Convert to Vietnam timezone (UTC+7)
+                const vietnamOffset = 7 * 60; // 7 hours in minutes
+                const localNow = new Date(now.getTime() + (vietnamOffset * 60 * 1000));
                 
-                console.log(`Checking slot ${timeString}: now=${now.toLocaleTimeString()}, slot=${slotDateTime.toLocaleTimeString()}, isPast=${isPastTime}, isToday=${isToday}, available=${!conflict && !isPastTime}`);
+                const isToday = date.toDateString() === localNow.toDateString();
+                const isPastTime = isToday && slotDateTime <= localNow;
+                
+                console.log(`Checking slot ${timeString}: now=${localNow.toLocaleTimeString()}, slot=${slotDateTime.toLocaleTimeString()}, isPast=${isPastTime}, isToday=${isToday}, available=${!conflict && !isPastTime}`);
 
                 timeSlots.push({
                     time: timeString,
@@ -350,8 +354,12 @@ export class TimeSlotController {
                 existingAppointments
             );            // Check if it's in the past - for today only show future slots
             const now = new Date();
-            const isToday = selectedDate.toDateString() === now.toDateString();
-            const isPastTime = isToday && slotDateTime <= now;
+            // Convert to Vietnam timezone (UTC+7)
+            const vietnamOffset = 7 * 60; // 7 hours in minutes
+            const localNow = new Date(now.getTime() + (vietnamOffset * 60 * 1000));
+            
+            const isToday = selectedDate.toDateString() === localNow.toDateString();
+            const isPastTime = isToday && slotDateTime <= localNow;
 
             const available = !hasConflict && !isPastTime;
 
