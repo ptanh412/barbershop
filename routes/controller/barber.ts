@@ -425,4 +425,148 @@ export class BarberController {
       next(error);
     }
   }
+  
+  static getBarberBookingStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authenticatedUser = (req as any).user as unknown as IBarber;
+
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const barberShop = await shop.findOne({ "barberInfo.id": authenticatedUser.id });
+
+      if (!barberShop) {
+        return res.status(404).json({ message: "Barber shop not found" });
+      }
+
+      const { period = '12months' } = req.query; // 6months, 12months, all
+
+      let dateFilter: any = {};
+      const now = new Date();
+
+      // Set date filter based on period
+      if (period === '6months') {
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(now.getMonth() - 6);
+        dateFilter = { appointmentDate: { $gte: sixMonthsAgo } };
+      } else if (period === '12months') {
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setMonth(now.getMonth() - 12);
+        dateFilter = { appointmentDate: { $gte: twelveMonthsAgo } };
+      }
+      // If period is 'all', no date filter is applied
+
+      const filter = {
+        shopId: barberShop._id,
+        ...dateFilter
+      };
+
+      // Get all appointments for the barber shop
+      const appointments = await appointment.find(filter).exec();
+
+      // Calculate total stats
+      const totalAppointments = appointments.length;
+      const completedAppointments = appointments.filter(apt => apt.status === AppointmentStatus.COMPLETED).length;
+      const cancelledAppointments = appointments.filter(apt => apt.status === AppointmentStatus.CANCELLED).length;
+      const pendingAppointments = appointments.filter(apt => apt.status === AppointmentStatus.PENDING).length;
+      const totalRevenue = appointments
+        .filter(apt => apt.status === AppointmentStatus.COMPLETED)
+        .reduce((sum, apt) => sum + apt.totalPrice, 0);
+
+      // Calculate monthly statistics
+      const monthlyStatsMap = new Map<string, { count: number; revenue: number; year: number; month: string }>();
+
+      appointments.forEach(apt => {
+        const date = new Date(apt.appointmentDate);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleString('default', { month: 'short' });
+
+        if (!monthlyStatsMap.has(monthKey)) {
+          monthlyStatsMap.set(monthKey, {
+            count: 0,
+            revenue: 0,
+            year: date.getFullYear(),
+            month: monthName
+          });
+        }
+
+        const stats = monthlyStatsMap.get(monthKey)!;
+        stats.count++;
+        if (apt.status === AppointmentStatus.COMPLETED) {
+          stats.revenue += apt.totalPrice;
+        }
+      });
+
+      const monthlyStats = Array.from(monthlyStatsMap.values())
+        .sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year;
+          return new Date(`${a.month} 1, ${a.year}`).getMonth() - new Date(`${b.month} 1, ${b.year}`).getMonth();
+        });
+
+      // Calculate status distribution
+      const statusCounts = new Map<AppointmentStatus, number>();
+      Object.values(AppointmentStatus).forEach(status => {
+        statusCounts.set(status, 0);
+      });
+
+      appointments.forEach(apt => {
+        statusCounts.set(apt.status, statusCounts.get(apt.status)! + 1);
+      });
+
+      const statusDistribution = Array.from(statusCounts.entries())
+        .filter(([_, count]) => count > 0)
+        .map(([status, count]) => ({
+          status,
+          count,
+          percentage: totalAppointments > 0 ? Math.round((count / totalAppointments) * 100) : 0
+        }));
+
+      // Calculate average bookings per month
+      const monthsCount = monthlyStats.length || 1;
+      const averageBookingsPerMonth = Math.round((totalAppointments / monthsCount) * 10) / 10;
+
+      // Top services analysis
+      const servicesMap = new Map<string, { count: number; revenue: number }>();
+      appointments.forEach(apt => {
+        apt.services.forEach(service => {
+          if (!servicesMap.has(service.serviceName)) {
+            servicesMap.set(service.serviceName, { count: 0, revenue: 0 });
+          }
+          const serviceStats = servicesMap.get(service.serviceName)!;
+          serviceStats.count++;
+          if (apt.status === AppointmentStatus.COMPLETED) {
+            serviceStats.revenue += service.servicePrice;
+          }
+        });
+      });
+
+      const topServices = Array.from(servicesMap.entries())
+        .sort(([, a], [, b]) => b.count - a.count)
+        .slice(0, 5)
+        .map(([name, stats]) => ({ name, count: stats.count, revenue: stats.revenue }));
+
+      const stats = {
+        totalAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        pendingAppointments,
+        totalRevenue,
+        monthlyStats,
+        statusDistribution,
+        averageBookingsPerMonth,
+        topServices
+      };
+
+      res.status(200).json({
+        success: true,
+        data: stats,
+        period: period
+      });
+
+    } catch (error) {
+      console.error('Error getting barber booking stats:', error);
+      next(error);
+    }
+  };
 }

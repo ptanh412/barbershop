@@ -21,6 +21,7 @@ router.get("/me", firebaseAuthMiddleware, asyncHandler(BarberController.getAuthe
 router.get("/appointments", jwtAuth, asyncHandler(BarberController.getShopAppointments));
 router.patch("/appointments/:id/status", jwtAuth, asyncHandler(BarberController.updateAppointmentStatusByBarber));
 router.get("/appointments/daily", jwtAuth, asyncHandler(BarberController.getDailyAppointments));
+router.get("/appointments/stats", jwtAuth, asyncHandler(BarberController.getBarberBookingStats));
 router.get('/shop/services', jwtAuth, asyncHandler(BarberController.getShopServices));
 router.post('/shop/services', jwtAuth, asyncHandler(BarberController.addShopServices));
 router.delete('/shop/services/:serviceId', jwtAuth, asyncHandler(BarberController.removeShopServices));
