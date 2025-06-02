@@ -219,9 +219,9 @@ export class CustomerController {
       const authenticatedUser = (req as any).user as unknown as IUser;
       if (!authenticatedUser) {
         return res.status(401).json({ message: "Unauthorized" });
-      }
+      }      const { search, sort, limit = '10', page = '1' } = req.query;
 
-      const { search, sort, limit = '10', page = '1' } = req.query;
+      console.log('Search parameters received:', { search, sort, limit, page });
 
       const filter: any = {};
 
@@ -229,8 +229,13 @@ export class CustomerController {
         filter.$or = [
           { shop_name: { $regex: search, $options: 'i' } },
           { address: { $regex: search, $options: 'i' } },
+          { 'services.name': { $regex: search, $options: 'i' } },
         ]
-      }
+      }      console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
+
+      // Check total shops in database for debugging
+      const totalShopsInDB = await shop.countDocuments({});
+      console.log('Total shops in database:', totalShopsInDB);
 
       let sortOptions: any = {};
 
@@ -242,9 +247,8 @@ export class CustomerController {
 
       const limitNum = parseInt(limit as string);
       const pageNum = parseInt(page as string);
-      const skip = (pageNum - 1) * limitNum;
-
-      const total = await shop.countDocuments(filter);
+      const skip = (pageNum - 1) * limitNum;      const total = await shop.countDocuments(filter);
+      console.log('Total shops matching filter:', total);
 
       const shops = await shop.find(filter)
         .select('shop_name address phone_number latitude longitude services open_time close_time')
@@ -253,13 +257,15 @@ export class CustomerController {
         .limit(limitNum)
         .exec();
 
+      console.log('Retrieved shops:', JSON.stringify(shops, null, 2));
+
       res.status(200).json({
         total,
         page: pageNum,
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum),
         data: shops,
-      })    } catch (error) {
+      })} catch (error) {
       next(error);
     }
   };
